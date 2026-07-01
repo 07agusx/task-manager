@@ -1,30 +1,37 @@
 tareas = []
+cont_ids = 0 # Contador que se utilizara para darle valor a las IDs de las tareas
+
 
 def add_task(tareas, task):
-    if len(task.strip("")) <= 0 or task.isdigit():
+    global cont_ids
+    if len(task.strip("")) <= 0 or task.isdigit(): # Verificar si la tarea cumple con los requisitos para añadirla
         print("Por favor ingrese una tarea valida.")
     else:
-        tareas.append({"nombre": task, "completada": False})
-        print(f"Nueva tarea agregada: {tareas}")
+        tareas.append({"id": cont_ids, "nombre": task, "completada": False}) # Añadir la tarea
+        cont_ids +=1 # Sumarle un 1 al contador para que la proxima tarea tenga un ID diferente
+        print(f"Nueva tarea agregada: ID = {tareas[-1]['id']} | Nombre = {tareas[-1]['nombre']} | Completada = {tareas[-1]['completada']}")
 
-def validation_task(tareas, indice):
-    if indice >= len(tareas) or indice < 0:
-        return False
+def complete_task(tareas, ids):
+    for tarea in tareas: #Buscar dentro del diccionario el ID que el usuario ingreso y verificar si se encuentra dentro de este
+        if ids == tarea["id"]: 
+            tarea["completada"] = True
+            print(f"La siguiente tarea fue completada: {tarea}")
+            break
     else:
-        return True
+        print("Ingrese un ID válido. Si no sabe cuales son los ID, utilice la opción 4.")
 
-def complete_task(tareas, indice):
-    if validation_task(tareas, indice):
-        tareas[indice]["completada"] = True
-        print(f"El estado de la siguiente tarea fue actualizada: {tareas[indice]}")
+def delete_task(tareas, ids):
+    for tarea in tareas: #Buscar dentro del diccionario el ID que el usuario ingreso y verificar si se encuentra dentro de este
+        if ids == tarea["id"]: 
+                print(f"La siguiente tarea fue eliminada: {tarea}")
+                tareas.remove(tarea)  # Eliminamos el elemento especifico que el usuario pidio ingresando su ID
+                break
     else:
-        print("Por favor ingrese una posición de la lista de tareas válida.")
+        print("Ingrese un ID válido. Si no sabe cuales son los ID, utilice la opción 4.")
 
-def delete_task(tareas, delete):
-    if validation_task(tareas, delete):
-         print(f"La siguiente tarea fue eliminada: {tareas.pop(delete)}")
-    else:
-        print("Por favor ingrese una posición de la lista de tareas válida.")
+def show_task(tareas):
+    for tarea in tareas:
+        print(f"ID = {tarea["id"]} | Nombre = {tarea["nombre"]} | Completada = {tarea["completada"]}")
 
 while True:
     print("")
@@ -35,7 +42,7 @@ while True:
 1 = Añadir una tarea
 2 = Completar una tarea
 3 = Eliminar una tarea
-4 = Mostrar la lista de tareas
+4 = Mostrar la lista de tareas y IDs
 5 = Salir del programa
           """)
     
@@ -47,22 +54,22 @@ while True:
             add_task(tareas, añadir)
         case "2":
             try:
-                actualizar = int(input("Ingrese la posición de la tarea que desea actualizar: "))
+                actualizar = int(input("Ingrese el ID de la tarea que desea actualizar: "))
             except ValueError:
-                print("Ingrese una posición númerica válida.")
+                print("Ingrese un ID válido.")
             else:
                 complete_task(tareas, actualizar)
         case "3":
             try:
-                eliminar = int(input("Ingrese la posición de la tarea que desea eliminar: "))
+                eliminar = int(input("Ingrese el ID de la tarea que desea eliminar: "))
             except ValueError:
-                print("Ingrese una posición númerica válida.")
+                print("Ingrese un ID válido.")
             else:
                 delete_task(tareas, eliminar)
         case "4":
             if len(tareas) > 0:
                 print("--Lista de tareas--")
-                print(tareas)
+                task_deco(tareas)
             else:
                 print("La lista se encuentra vacia, agrega tareas para visualizarla.")
         case "5":
