@@ -1,81 +1,105 @@
-tareas = []
-cont_ids = 0 # Contador que se utilizara para darle valor a las IDs de las tareas
+import json
 
+task_list = []
+cont_ids = 0 
 
-def add_task(tareas, task):
+def json_task(task_list, cont_ids):
+    json_file = "task_manager.json"
+    with open(json_file, "w") as task_data:
+        data = {"tasks": task_list, "ids": cont_ids}
+        json.dump(data, task_data)
+
+def json_verify():
+    try:
+        with open("task_manager.json", "r") as stored_tasks:
+            data = json.load(stored_tasks)
+            return data["tasks"], data["ids"]
+    except FileNotFoundError:
+        return [], 0
+
+def add_task(task_list, task):
     global cont_ids
-    if len(task.strip("")) <= 0 or task.isdigit(): # Verificar si la tarea cumple con los requisitos para añadirla
-        print("Por favor ingrese una tarea valida.")
+    if len(task.strip()) <= 0 or task.isdigit():
+        print("Please enter a valid task.")
     else:
-        tareas.append({"id": cont_ids, "nombre": task, "completada": False}) # Añadir la tarea
-        cont_ids +=1 # Sumarle un 1 al contador para que la proxima tarea tenga un ID diferente
-        print(f"Nueva tarea agregada: ID = {tareas[-1]['id']} | Nombre = {tareas[-1]['nombre']} | Completada = {tareas[-1]['completada']}")
+        task_list.append({"id": cont_ids, "name": task, "complete": False})
+        cont_ids +=1 
+        print(f"New task added: ID = {task_list[-1]['id']} | Name = {task_list[-1]['name']} | Complete = {task_list[-1]['complete']}")
+        json_task(task_list, cont_ids)
 
-def complete_task(tareas, ids):
-    for tarea in tareas: #Buscar dentro del diccionario el ID que el usuario ingreso y verificar si se encuentra dentro de este
-        if ids == tarea["id"]: 
-            tarea["completada"] = True
-            print(f"La siguiente tarea fue completada: {tarea}")
-            break
-    else:
-        print("Ingrese un ID válido. Si no sabe cuales son los ID, utilice la opción 4.")
-
-def delete_task(tareas, ids):
-    for tarea in tareas: #Buscar dentro del diccionario el ID que el usuario ingreso y verificar si se encuentra dentro de este
-        if ids == tarea["id"]: 
-                print(f"La siguiente tarea fue eliminada: {tarea}")
-                tareas.remove(tarea)  # Eliminamos el elemento especifico que el usuario pidio ingresando su ID
+def complete_task(task_list, ids):
+    global cont_ids
+    for tasks in task_list: 
+        if ids == tasks["id"]:
+            if  tasks["complete"]:
+                print("The task has already been completed.")
+                break
+            else:
+                tasks["complete"] = True
+                print(f"The following task was completed: {tasks}")
+                json_task(task_list, cont_ids)
                 break
     else:
-        print("Ingrese un ID válido. Si no sabe cuales son los ID, utilice la opción 4.")
+        print("Enter a valid ID. If you do not know the IDs, use option 4.")
 
-def show_task(tareas):
-    for tarea in tareas:
-        print(f"ID = {tarea["id"]} | Nombre = {tarea["nombre"]} | Completada = {tarea["completada"]}")
+def delete_task(task_list, ids):
+    global cont_ids
+    for tasks in task_list: 
+        if ids == tasks["id"]: 
+                print(f"The following task was deleted: {tasks}")
+                task_list.remove(tasks) 
+                json_task(task_list, cont_ids)
+                break
+    else:
+        print("Enter a valid ID. If you do not know the IDs, use option 4.")
+
+def show_task(task_list):
+    for tasks in task_list:
+        print(f"ID = {tasks["id"]} | Name = {tasks["name"]} | Complete = {tasks["complete"]}")
+
+task_list, cont_ids = json_verify()
 
 while True:
     print("")
-    print("¡Bienvenido al --Gestor de tareas-- !")
+    print("¡Welcome to the --Task Manager--!")
     print("""
-            - - - Opciones - - -
+            - - - Options - - -
           
-1 = Añadir una tarea
-2 = Completar una tarea
-3 = Eliminar una tarea
-4 = Mostrar la lista de tareas y IDs
-5 = Salir del programa
+1 = Add task
+2 = Complete task
+3 = Delete task
+4 = Show task list and IDs
+5 = Exit
           """)
     
-    opcion = input("Ingrese una opción: ")
+    option = input("Enter an option: ")
 
-    match opcion:
+    match option:
         case "1":
-            añadir = input("Ingrese el nombre de la tarea que desea añadir: ")
-            add_task(tareas, añadir)
+            add = input("Enter the name of the task you wish to add: ")
+            add_task(task_list, add)
         case "2":
             try:
-                actualizar = int(input("Ingrese el ID de la tarea que desea actualizar: "))
+                update = int(input("Enter the ID of the task you wish to update: "))
             except ValueError:
-                print("Ingrese un ID válido.")
+                print("Enter a valid ID.")
             else:
-                complete_task(tareas, actualizar)
+                complete_task(task_list, update)
         case "3":
             try:
-                eliminar = int(input("Ingrese el ID de la tarea que desea eliminar: "))
+                delete = int(input("Enter the ID of the task you wish to delete: "))
             except ValueError:
-                print("Ingrese un ID válido.")
+                print("Enter a valid ID.")
             else:
-                delete_task(tareas, eliminar)
+                delete_task(task_list, delete)
         case "4":
-            if len(tareas) > 0:
-                print("--Lista de tareas--")
-                task_deco(tareas)
+            if len(task_list) > 0:
+                print("--Task list--")
+                show_task(task_list)
             else:
-                print("La lista se encuentra vacia, agrega tareas para visualizarla.")
+                print("The list is empty; add tasks to view them.")
         case "5":
-            print("Saliendo del gestor de tareas...")
+            print("Exiting the task manager...")
             break
         case _:
-            print("ERROR: Por favor ingrese una opción valida.")
-
- 
+            print("ERROR: Please enter a valid option.")
