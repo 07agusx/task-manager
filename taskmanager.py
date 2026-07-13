@@ -32,7 +32,7 @@ class TaskManager:
 
     def add_task(self, new_task):
         if isinstance(new_task, Task):
-            if not len(new_task.name.strip()) <= 0 or new_task.name.isdigit():
+            if len(new_task.name.strip()) <= 0 or new_task.name.isdigit():
                 print("The task entered is invalid.")
             else:
                 self.task_list.append(new_task)
