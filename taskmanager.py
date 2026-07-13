@@ -1,63 +1,93 @@
 import json
 
-task_list = []
-cont_ids = 0 
-
-def json_task(task_list, cont_ids):
-    json_file = "task_manager.json"
-    with open(json_file, "w") as task_data:
-        data = {"tasks": task_list, "ids": cont_ids}
-        json.dump(data, task_data)
-
 def json_verify():
     try:
-        with open("task_manager.json", "r") as stored_tasks:
-            data = json.load(stored_tasks)
+        with open("task-manager.json") as stored_task:
+            data = json.load(stored_task)
             return data["tasks"], data["ids"]
     except FileNotFoundError:
         return [], 0
 
-def add_task(task_list, task):
-    global cont_ids
-    if len(task.strip()) <= 0 or task.isdigit():
-        print("Please enter a valid task.")
-    else:
-        task_list.append({"id": cont_ids, "name": task, "complete": False})
-        cont_ids +=1 
-        print(f"New task added: ID = {task_list[-1]['id']} | Name = {task_list[-1]['name']} | Complete = {task_list[-1]['complete']}")
-        json_task(task_list, cont_ids)
+class Task:
+    def __init__(self, name):
+        self.name = name
+        self.id = None
+        self.complete = False
 
-def complete_task(task_list, ids):
-    global cont_ids
-    for tasks in task_list: 
-        if ids == tasks["id"]:
-            if  tasks["complete"]:
-                print("The task has already been completed.")
-                break
+    def __str__(self):
+        return f"Name: {self.name} | ID: {self.id} | Complete: {self.complete}"
+
+class TaskManager:
+    def __init__(self):
+        self.stored_task, self.cont_id = json_verify() 
+        self.task_list = []
+        self.convert_obj(self.stored_task)
+
+    def convert_obj(self, stored_task):
+        for tasks in stored_task:
+            task = Task(tasks["name"])
+            task.id = tasks["id"]
+            task.complete = tasks["complete"]
+            self.task_list.append(task)
+
+    def add_task(self, new_task):
+        if isinstance(new_task, Task):
+            if not len(new_task.name.strip()) <= 0 or new_task.name.isdigit():
+                print("The task entered is invalid.")
             else:
-                tasks["complete"] = True
-                print(f"The following task was completed: {tasks}")
-                json_task(task_list, cont_ids)
+                self.task_list.append(new_task)
+                self.cont_id += 1
+                new_task.id = self.cont_id
+                print(f"- New task added => {new_task}")
+                self.json_task()
+        else:
+            print("The task entered is invalid.")
+
+    def del_task(self, del_task):
+        for task in self.task_list:
+            if del_task == task.id:
+                self.task_list.remove(task)
+                print(f"- Task removed => {task}")
+                self.json_task()
                 break
-    else:
-        print("Enter a valid ID. If you do not know the IDs, use option 4.")
+        else:
+            print("The ID of the task entered is invalid.")
 
-def delete_task(task_list, ids):
-    global cont_ids
-    for tasks in task_list: 
-        if ids == tasks["id"]: 
-                print(f"The following task was deleted: {tasks}")
-                task_list.remove(tasks) 
-                json_task(task_list, cont_ids)
-                break
-    else:
-        print("Enter a valid ID. If you do not know the IDs, use option 4.")
+    def complete_task(self, complete_task):
+        for task in self.task_list:
+            if complete_task == task.id:
+                if task.complete:
+                    print("The entered task has already been completed.")
+                    break
+                else:
+                    task.complete = True
+                    print(f"- Task completed => {task}")
+                    self.json_task()
+                    break
+        else:
+            print("The ID of the task entered is invalid.")
 
-def show_task(task_list):
-    for tasks in task_list:
-        print(f"ID = {tasks["id"]} | Name = {tasks["name"]} | Complete = {tasks["complete"]}")
+    def show_tasks(self):
+        if len(self.task_list) > 0:
+            for tasks in self.task_list:
+                print(f"- Task-Manager - {tasks}")
+        else:
+            print("The Task Manager is empty.")
 
-task_list, cont_ids = json_verify()
+    def convert_dict(self):
+        task_dict = []
+        for task in self.task_list:
+            task_dict.append({"id": task.id, "name": task.name, "complete": task.complete})
+        return task_dict
+    
+    def json_task(self):
+        json_file = "task-manager.json"
+        with open(json_file, "w") as task_data:
+            data = {"tasks": self.convert_dict(), "ids": self.cont_id}
+            json.dump(data, task_data, indent=4)
+
+task_manager = TaskManager() 
+
 
 while True:
     print("")
@@ -76,28 +106,25 @@ while True:
 
     match option:
         case "1":
-            add = input("Enter the name of the task you wish to add: ")
-            add_task(task_list, add)
+            new_task = input("Enter the name of the task you wish to add: ")
+            task = Task(new_task)
+            task_manager.add_task(task)
         case "2":
             try:
                 update = int(input("Enter the ID of the task you wish to update: "))
             except ValueError:
                 print("Enter a valid ID.")
             else:
-                complete_task(task_list, update)
+                task_manager.complete_task(update)
         case "3":
             try:
                 delete = int(input("Enter the ID of the task you wish to delete: "))
             except ValueError:
                 print("Enter a valid ID.")
             else:
-                delete_task(task_list, delete)
+                task_manager.del_task(delete)
         case "4":
-            if len(task_list) > 0:
-                print("--Task list--")
-                show_task(task_list)
-            else:
-                print("The list is empty; add tasks to view them.")
+                task_manager.show_tasks()
         case "5":
             print("Exiting the task manager...")
             break
